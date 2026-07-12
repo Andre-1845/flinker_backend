@@ -11,6 +11,7 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 ## Documentação
 
 - [`SETUP.md`](./SETUP.md) — como rodar o projeto localmente
+- [`CHANGELOG.md`](./CHANGELOG.md) — histórico de mudanças, decisões e correções por fase
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — arquitetura, módulos de domínio e decisões de negócio
 - [`docs/technical-spec-original.md`](./docs/technical-spec-original.md) — especificação técnica original
 - [`docs/pitch-deck-summary.md`](./docs/pitch-deck-summary.md) — contexto de produto e negócio
