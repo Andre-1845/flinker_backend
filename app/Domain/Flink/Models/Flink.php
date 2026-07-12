@@ -72,7 +72,9 @@ class Flink extends Model
 
         return $query
             ->selectRaw("flinks.*, {$haversine} AS distance_km", [$latitude, $longitude, $latitude])
-            ->havingRaw('distance_km <= ?', [$radiusKm])
+            // Postgres não permite referenciar um alias do SELECT dentro do HAVING/WHERE
+            // (diferente do MySQL), então repetimos a expressão completa aqui.
+            ->whereRaw("{$haversine} <= ?", [$latitude, $longitude, $latitude, $radiusKm])
             ->orderBy('distance_km');
     }
 }
