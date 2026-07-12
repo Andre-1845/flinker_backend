@@ -15,6 +15,7 @@ class CompanyResource extends JsonResource
             'responsible_name' => $this->responsible_name,
             'responsible_cpf' => $this->responsible_cpf,
             'phone' => $this->phone,
+            'address' => $this->address,
             'pix_key' => $this->pix_key,
             'reputation' => (float) $this->reputation,
         ];

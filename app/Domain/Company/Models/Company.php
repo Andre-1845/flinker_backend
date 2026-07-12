@@ -19,6 +19,7 @@ class Company extends Model
         'responsible_name',
         'responsible_cpf',
         'phone',
+        'address',
         'pix_key',
         'reputation',
     ];

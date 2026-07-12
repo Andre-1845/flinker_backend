@@ -32,6 +32,7 @@ class CompanyController extends Controller
             'responsible_name' => ['sometimes', 'string', 'max:255'],
             'responsible_cpf' => ['sometimes', 'string', 'size:11'],
             'phone' => ['sometimes', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:255'],
             'pix_key' => ['nullable', 'string', 'max:255'],
         ]);
 

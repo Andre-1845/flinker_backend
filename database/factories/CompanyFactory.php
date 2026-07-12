@@ -21,6 +21,7 @@ class CompanyFactory extends Factory
             'responsible_name' => fake()->name(),
             'responsible_cpf' => fake()->numerify('###########'),
             'phone' => fake()->numerify('(##) #####-####'),
+            'address' => fake()->address(),
             'pix_key' => fake()->uuid(),
             'reputation' => fake()->randomFloat(2, 3, 5),
         ];

@@ -30,6 +30,7 @@ class RegisterCompanyAction
                 'responsible_name' => $data['responsible_name'],
                 'responsible_cpf' => $data['responsible_cpf'],
                 'phone' => $data['phone'],
+                'address' => $data['address'] ?? null,
                 'pix_key' => $data['pix_key'] ?? null,
             ]);
 

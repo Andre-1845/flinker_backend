@@ -21,6 +21,7 @@ class RegisterCompanyRequest extends FormRequest
             'responsible_name' => ['required', 'string', 'max:255'],
             'responsible_cpf' => ['required', 'string', 'size:11'],
             'phone' => ['required', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:255'],
             'pix_key' => ['nullable', 'string', 'max:255'],
         ];
     }
