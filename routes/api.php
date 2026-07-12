@@ -1,0 +1,66 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Flinker
+|--------------------------------------------------------------------------
+|
+| Rotas organizadas por módulo de domínio, conforme a especificação técnica.
+| Cada fase do desenvolvimento vai preencher o grupo correspondente.
+|
+*/
+
+// Fase 0 - healthcheck simples pra confirmar que a API está no ar
+Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'flinker-api']));
+
+// Fase 1 - Autenticação (público)
+Route::prefix('auth')->group(function () {
+    // Route::post('/login', [AuthController::class, 'login']);
+    // Route::post('/register', [AuthController::class, 'register']);
+});
+
+// Rotas autenticadas (todas as demais, protegidas por Sanctum)
+Route::middleware('auth:sanctum')->group(function () {
+    // Fase 1 - Usuários
+    // Route::get('/users/me', [UserController::class, 'me']);
+    // Route::put('/users/me', [UserController::class, 'update']);
+
+    // Fase 1 - Profissionais
+    // Route::apiResource('professionals', ProfessionalController::class)->only(['index', 'show', 'update']);
+
+    // Fase 1 - Empresas
+    // Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'update']);
+
+    // Fase 2 - Flinks
+    // Route::apiResource('flinks', FlinkController::class);
+    // Route::get('/flinks/active', [FlinkController::class, 'active']);
+    // Route::get('/flinks/company/{company}', [FlinkController::class, 'byCompany']);
+
+    // Fase 3 - Matches
+    // Route::apiResource('matches', MatchController::class)->only(['index', 'store', 'update']);
+
+    // Fase 3 - Agenda
+    // Route::get('/schedule', [ScheduleController::class, 'index']);
+    // Route::post('/schedule/block', [ScheduleController::class, 'block']);
+
+    // Fase 4 - Carteira e Transações
+    // Route::get('/wallet', [WalletController::class, 'show']);
+    // Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    // Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+    // Route::get('/transactions', [TransactionController::class, 'index']);
+
+    // Fase 5 - Reputação
+    // Route::post('/ratings', [RatingController::class, 'store']);
+    // Route::get('/ratings', [RatingController::class, 'index']);
+
+    // Fase 6 - Administração
+    // Route::prefix('admin')->group(function () {
+    //     Route::get('/companies', [AdminController::class, 'companies']);
+    //     Route::get('/professionals', [AdminController::class, 'professionals']);
+    //     Route::get('/flinks', [AdminController::class, 'flinks']);
+    //     Route::put('/block-user', [AdminController::class, 'blockUser']);
+    //     Route::get('/logs', [AdminController::class, 'logs']);
+    // });
+});
