@@ -17,14 +17,33 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 
 ## Status
 
-🚧 Fase 0 — Setup do projeto (em andamento)
+🚧 Fase 1 — Perfis (em andamento)
 
-- [x] Estrutura Laravel + módulos de domínio
-- [x] Configuração PostgreSQL
-- [x] Sanctum configurado para autenticação de API
-- [ ] Fase 1 — Perfis (User, Professional, Company)
+- [x] Fase 0 — Estrutura Laravel + módulos de domínio + PostgreSQL + Sanctum
+- [x] Fase 1 — Perfis (User, Professional, Company): migrations, models, cadastro e login
 - [ ] Fase 2 — Flink + Precificação + Geolocalização
 - [ ] Fase 3 — Match + Agenda + Check-in
 - [ ] Fase 4 — Carteira e Pagamento (Mercado Pago)
 - [ ] Fase 5 — Reputação e Avaliações
 - [ ] Fase 6 — Admin e Infraestrutura
+
+## Endpoints disponíveis (Fase 1)
+
+| Método | Rota | Autenticação | Descrição |
+|---|---|---|---|
+| GET | `/api/ping` | Não | Healthcheck |
+| POST | `/api/auth/register/professional` | Não | Cadastro de profissional |
+| POST | `/api/auth/register/company` | Não | Cadastro de empresa |
+| POST | `/api/auth/login` | Não | Login (retorna token Sanctum) |
+| POST | `/api/auth/logout` | Sim | Encerra a sessão/token atual |
+| GET | `/api/users/me` | Sim | Dados do usuário autenticado |
+| PUT | `/api/users/me` | Sim | Atualiza nome/email |
+| GET | `/api/professionals` | Sim | Lista profissionais (paginado, filtro `min_reputation`) |
+| GET | `/api/professionals/{id}` | Sim | Detalhe de um profissional |
+| PUT | `/api/professionals/{id}` | Sim | Atualiza o próprio perfil (ou admin) |
+| GET | `/api/companies` | Sim | Lista empresas (paginado, filtro `min_reputation`) |
+| GET | `/api/companies/{id}` | Sim | Detalhe de uma empresa |
+| PUT | `/api/companies/{id}` | Sim | Atualiza a própria empresa (ou admin) |
+
+Autenticação via Sanctum: envie o token retornado no login/cadastro como
+`Authorization: Bearer {token}` nas rotas protegidas.

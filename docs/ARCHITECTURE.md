@@ -69,11 +69,17 @@ Cada módulo de domínio segue a mesma subestrutura:
   presença comparando sua localização atual com a do Flink, dentro de um raio de tolerância
   configurável (sugestão inicial: 150m).
 
+### Perfis de usuário (Fase 1 — decidido)
+- Perfil é **exclusivo por conta**: cada `User` tem um único `profile` (`professional`,
+  `company` ou `admin`), definido no cadastro e imutável depois (não há endpoint de troca
+  de perfil no MVP). Alguém que queira atuar dos dois lados cria duas contas com emails
+  diferentes. Ver `app/Domain/Shared/Enums/UserProfile.php`.
+- Cadastro e login são só por email/senha por enquanto (sem login social).
+
 ### Pendências a decidir com o cliente
 - Regras de desempate quando múltiplos profissionais dão match no mesmo Flink.
 - Enum de status do Flink (proposta: `open`, `matched`, `confirmed`, `in_progress`,
   `completed`, `cancelled` — a validar).
-- Se um usuário pode acumular os perfis Professional e Company, ou é exclusivo.
 - Módulo de "capacitação contínua" citado no pitch deck — fica fora do MVP por padrão até
   definição de escopo.
 

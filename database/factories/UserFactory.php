@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Domain\Shared\Enums\UserProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,24 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'profile' => UserProfile::Professional,
+            'is_active' => true,
         ];
+    }
+
+    public function professional(): static
+    {
+        return $this->state(fn (array $attributes) => ['profile' => UserProfile::Professional]);
+    }
+
+    public function company(): static
+    {
+        return $this->state(fn (array $attributes) => ['profile' => UserProfile::Company]);
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => ['profile' => UserProfile::Admin]);
     }
 
     /**

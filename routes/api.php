@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\ProfessionalController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,21 +21,24 @@ Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'f
 
 // Fase 1 - Autenticação (público)
 Route::prefix('auth')->group(function () {
-    // Route::post('/login', [AuthController::class, 'login']);
-    // Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register/professional', [AuthController::class, 'registerProfessional']);
+    Route::post('/register/company', [AuthController::class, 'registerCompany']);
+    Route::post('/login', [AuthController::class, 'login']);
 });
 
 // Rotas autenticadas (todas as demais, protegidas por Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
     // Fase 1 - Usuários
-    // Route::get('/users/me', [UserController::class, 'me']);
-    // Route::put('/users/me', [UserController::class, 'update']);
+    Route::get('/users/me', [UserController::class, 'me']);
+    Route::put('/users/me', [UserController::class, 'update']);
 
     // Fase 1 - Profissionais
-    // Route::apiResource('professionals', ProfessionalController::class)->only(['index', 'show', 'update']);
+    Route::apiResource('professionals', ProfessionalController::class)->only(['index', 'show', 'update']);
 
     // Fase 1 - Empresas
-    // Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'update']);
+    Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'update']);
 
     // Fase 2 - Flinks
     // Route::apiResource('flinks', FlinkController::class);
@@ -64,3 +71,4 @@ Route::middleware('auth:sanctum')->group(function () {
     //     Route::get('/logs', [AdminController::class, 'logs']);
     // });
 });
+
