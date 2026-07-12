@@ -21,6 +21,7 @@ class RegisterCompanyAction
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'profile' => UserProfile::Company,
+                'is_active' => true,
             ]);
 
             Company::create([

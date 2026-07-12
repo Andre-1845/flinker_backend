@@ -21,6 +21,7 @@ class RegisterProfessionalAction
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'profile' => UserProfile::Professional,
+                'is_active' => true,
             ]);
 
             Professional::create([
