@@ -1,0 +1,200 @@
+{
+  "info": {
+    "name": "Flinker API - Fluxo Completo (Fase 0-3)",
+    "description": "Cadastro > Flink > Match > Confirmação > Check-in. Rode em ordem (ou use o Collection Runner). Tokens e IDs são capturados automaticamente entre as chamadas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api" },
+    { "key": "company_token", "value": "" },
+    { "key": "company_id", "value": "" },
+    { "key": "professional_token", "value": "" },
+    { "key": "professional_id", "value": "" },
+    { "key": "flink_id", "value": "" },
+    { "key": "match_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Cadastrar Empresa",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/register/company",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Buffet Sabor & Arte\",\n  \"email\": \"contato@saborarte.com\",\n  \"password\": \"12345678\",\n  \"password_confirmation\": \"12345678\",\n  \"cnpj\": \"12345678000199\",\n  \"responsible_name\": \"Carla Souza\",\n  \"responsible_cpf\": \"98765432100\",\n  \"phone\": \"24988887777\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.collectionVariables.set('company_token', data.token);",
+          "pm.collectionVariables.set('company_id', data.user.company.id);",
+          "pm.test('Status 201', () => pm.response.to.have.status(201));"
+        ]}
+      }]
+    },
+    {
+      "name": "2. Cadastrar Profissional",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{base_url}}/auth/register/professional",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Julia Fernandes\",\n  \"email\": \"julia@teste.com\",\n  \"password\": \"12345678\",\n  \"password_confirmation\": \"12345678\",\n  \"cpf\": \"11122233344\",\n  \"phone\": \"24977776666\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.collectionVariables.set('professional_token', data.token);",
+          "pm.collectionVariables.set('professional_id', data.user.professional.id);",
+          "pm.test('Status 201', () => pm.response.to.have.status(201));"
+        ]}
+      }]
+    },
+    {
+      "name": "3. Empresa cria um Flink",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{company_token}}" }
+        ],
+        "url": "{{base_url}}/flinks",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"activity_type\": \"Garçom\",\n  \"location\": \"Rua Exemplo, 123 - Resende, RJ\",\n  \"latitude\": -22.4738,\n  \"longitude\": -44.4438,\n  \"start_date_time\": \"2026-08-01 18:00:00\",\n  \"end_date_time\": \"2026-08-02 02:00:00\",\n  \"requirements\": \"Experiência em eventos\",\n  \"net_value\": 200\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.collectionVariables.set('flink_id', data.data.id);",
+          "pm.test('Status 201', () => pm.response.to.have.status(201));",
+          "pm.test('Valor total = 214', () => pm.expect(data.data.pricing.total_value).to.eql(214));"
+        ]}
+      }]
+    },
+    {
+      "name": "4. Listar Flinks ativos (com filtro de distância)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{professional_token}}" }],
+        "url": {
+          "raw": "{{base_url}}/flinks/active?latitude=-22.47&longitude=-44.44&radius_km=20",
+          "host": ["{{base_url}}"],
+          "path": ["flinks", "active"],
+          "query": [
+            { "key": "latitude", "value": "-22.47" },
+            { "key": "longitude", "value": "-44.44" },
+            { "key": "radius_km", "value": "20" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "5. Profissional demonstra interesse (cria Match)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{professional_token}}" }
+        ],
+        "url": "{{base_url}}/matches",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"flink_id\": {{flink_id}}\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.collectionVariables.set('match_id', data.data.id);",
+          "pm.test('Status 201', () => pm.response.to.have.status(201));",
+          "pm.test('Status pending', () => pm.expect(data.data.status).to.eql('pending'));"
+        ]}
+      }]
+    },
+    {
+      "name": "6. Empresa aceita o candidato",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Authorization", "value": "Bearer {{company_token}}" }],
+        "url": "{{base_url}}/matches/{{match_id}}/accept"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.test('Status accepted', () => pm.expect(data.data.status).to.eql('accepted'));"
+        ]}
+      }]
+    },
+    {
+      "name": "7. Profissional confirma o aceite (bloqueia agenda)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Authorization", "value": "Bearer {{professional_token}}" }],
+        "url": "{{base_url}}/matches/{{match_id}}/confirm"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.test('Status confirmed', () => pm.expect(data.data.status).to.eql('confirmed'));"
+        ]}
+      }]
+    },
+    {
+      "name": "8. Ver agenda do profissional (deve mostrar o bloqueio)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{professional_token}}" }],
+        "url": "{{base_url}}/schedule"
+      }
+    },
+    {
+      "name": "9. Check-in geolocalizado (dentro do raio - deve funcionar)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{professional_token}}" }
+        ],
+        "url": "{{base_url}}/matches/{{match_id}}/checkin",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"latitude\": -22.4739,\n  \"longitude\": -44.4439\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.test('Status in_progress no Flink', () => pm.expect(data.data.flink.status).to.eql('in_progress'));"
+        ]}
+      }]
+    },
+    {
+      "name": "9b. Check-in fora do raio (deve dar erro 422) - opcional",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{professional_token}}" }
+        ],
+        "url": "{{base_url}}/matches/{{match_id}}/checkin",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+        }
+      }
+    }
+  ]
+}
