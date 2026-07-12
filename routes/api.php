@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\FlinkController;
 use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -41,9 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'update']);
 
     // Fase 2 - Flinks
-    // Route::apiResource('flinks', FlinkController::class);
-    // Route::get('/flinks/active', [FlinkController::class, 'active']);
-    // Route::get('/flinks/company/{company}', [FlinkController::class, 'byCompany']);
+    Route::get('/flinks/active', [FlinkController::class, 'active']);
+    Route::get('/flinks/company/{company}', [FlinkController::class, 'byCompany']);
+    Route::apiResource('flinks', FlinkController::class);
 
     // Fase 3 - Matches
     // Route::apiResource('matches', MatchController::class)->only(['index', 'store', 'update']);

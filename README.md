@@ -17,17 +17,17 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 
 ## Status
 
-🚧 Fase 1 — Perfis (em andamento)
+🚧 Fase 2 — Flink + Precificação + Geolocalização (em andamento)
 
 - [x] Fase 0 — Estrutura Laravel + módulos de domínio + PostgreSQL + Sanctum
 - [x] Fase 1 — Perfis (User, Professional, Company): migrations, models, cadastro e login
-- [ ] Fase 2 — Flink + Precificação + Geolocalização
+- [x] Fase 2 — Flink, PricingService (margem fixa configurável) e filtro por geolocalização
 - [ ] Fase 3 — Match + Agenda + Check-in
 - [ ] Fase 4 — Carteira e Pagamento (Mercado Pago)
 - [ ] Fase 5 — Reputação e Avaliações
 - [ ] Fase 6 — Admin e Infraestrutura
 
-## Endpoints disponíveis (Fase 1)
+## Endpoints disponíveis
 
 | Método | Rota | Autenticação | Descrição |
 |---|---|---|---|
@@ -44,6 +44,13 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 | GET | `/api/companies` | Sim | Lista empresas (paginado, filtro `min_reputation`) |
 | GET | `/api/companies/{id}` | Sim | Detalhe de uma empresa |
 | PUT | `/api/companies/{id}` | Sim | Atualiza a própria empresa (ou admin) |
+| GET | `/api/flinks` | Sim | Lista Flinks (paginado, filtro `latitude`/`longitude`/`radius_km`) |
+| GET | `/api/flinks/active` | Sim | Flinks com status `open`, mesmos filtros de geolocalização |
+| GET | `/api/flinks/company/{company}` | Sim | Flinks de uma empresa específica |
+| GET | `/api/flinks/{id}` | Sim | Detalhe de um Flink |
+| POST | `/api/flinks` | Sim (empresa) | Cria um Flink — margem calculada automaticamente |
+| PUT | `/api/flinks/{id}` | Sim (dono ou admin) | Atualiza um Flink (recalcula margem se `net_value` mudar) |
+| DELETE | `/api/flinks/{id}` | Sim (dono ou admin) | Remove um Flink (só se ainda editável) |
 
 Autenticação via Sanctum: envie o token retornado no login/cadastro como
 `Authorization: Bearer {token}` nas rotas protegidas.
