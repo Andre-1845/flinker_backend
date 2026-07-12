@@ -2,10 +2,13 @@
 
 namespace App\Domain\Professional\Models;
 
+use App\Domain\Match\Models\FlinkMatch;
+use App\Domain\Schedule\Models\ScheduleBlock;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Professional extends Model
 {
@@ -34,5 +37,15 @@ class Professional extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function matches(): HasMany
+    {
+        return $this->hasMany(FlinkMatch::class);
+    }
+
+    public function scheduleBlocks(): HasMany
+    {
+        return $this->hasMany(ScheduleBlock::class);
     }
 }

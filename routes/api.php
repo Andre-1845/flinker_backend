@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\FlinkController;
+use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\ProfessionalController;
+use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,11 +49,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('flinks', FlinkController::class);
 
     // Fase 3 - Matches
-    // Route::apiResource('matches', MatchController::class)->only(['index', 'store', 'update']);
+    Route::get('/matches', [MatchController::class, 'index']);
+    Route::post('/matches', [MatchController::class, 'store']);
+    Route::put('/matches/{match}/accept', [MatchController::class, 'accept']);
+    Route::put('/matches/{match}/confirm', [MatchController::class, 'confirm']);
+    Route::post('/matches/{match}/checkin', [MatchController::class, 'checkin']);
+    Route::put('/matches/{match}/cancel', [MatchController::class, 'cancel']);
 
     // Fase 3 - Agenda
-    // Route::get('/schedule', [ScheduleController::class, 'index']);
-    // Route::post('/schedule/block', [ScheduleController::class, 'block']);
+    Route::get('/schedule', [ScheduleController::class, 'index']);
+    Route::post('/schedule/block', [ScheduleController::class, 'block']);
 
     // Fase 4 - Carteira e Transações
     // Route::get('/wallet', [WalletController::class, 'show']);

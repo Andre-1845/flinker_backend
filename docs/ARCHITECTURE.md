@@ -52,6 +52,11 @@ Cada módulo de domínio segue a mesma subestrutura:
 - `Actions/` — casos de uso isolados (ex: `CreateFlinkAction`, `AcceptMatchAction`)
 - `Enums/` — enums do PHP (ex: status do Flink, tipo de transação)
 
+> **Nota**: o model do módulo `Match` se chama `FlinkMatch`, não `Match` — a palavra
+> `match` é uma keyword reservada do PHP 8+ (por causa da expressão `match`) e não pode
+> ser usada como nome de classe/enum/trait. O namespace `App\Domain\Match\...` continua
+> normal (reserved words são permitidas em segmentos de namespace).
+
 ## Decisões de negócio confirmadas
 
 ### Precificação (Fase 2)
@@ -76,12 +81,32 @@ Cada módulo de domínio segue a mesma subestrutura:
   diferentes. Ver `app/Domain/Shared/Enums/UserProfile.php`.
 - Cadastro e login são só por email/senha por enquanto (sem login social).
 
+### Match, Agenda e Check-in (Fase 3 — decidido)
+- **Regra de desempate**: quando a empresa aceita um candidato (`Accepted`), todos os
+  demais matches `Pending` no mesmo Flink são automaticamente marcados como `Rejected`.
+  Simples e direto para o MVP — pode evoluir para um ranking mais sofisticado depois.
+- **Fluxo de status do Match**: `Pending` (profissional demonstrou interesse) →
+  `Accepted` (empresa escolheu) → `Confirmed` (profissional confirmou o aceite mútuo).
+  A qualquer momento pode virar `Rejected` (não foi o escolhido) ou `Cancelled`
+  (alguma das partes desistiu).
+- **Agenda**: ao confirmar um match (`Confirmed`), o sistema cria automaticamente um
+  bloqueio de agenda (`ScheduleBlock`) pro profissional, usando o horário do Flink.
+  Antes de confirmar, o sistema verifica se já não existe um bloqueio conflitante
+  (`ScheduleConflictChecker`) — se houver, a confirmação é recusada. Profissionais também
+  podem criar bloqueios manuais (indisponibilidade) via `POST /schedule/block`.
+- **Check-in geolocalizado**: só é possível após o match estar `Confirmed`. Compara a
+  localização enviada pelo profissional com a do Flink usando a fórmula de Haversine
+  (`GeoDistanceService`); se estiver fora do raio de tolerância
+  (`FLINKER_CHECKIN_RADIUS_METERS`, padrão 150m), o check-in é recusado. Ao dar certo,
+  o Flink muda para `in_progress`.
+- **Cancelamento**: cancelar um match `Confirmed` libera o bloqueio de agenda e reabre
+  o Flink (`Open`) para novos candidatos.
+
 ### Pendências a decidir com o cliente
-- Regras de desempate quando múltiplos profissionais dão match no mesmo Flink.
-- Enum de status do Flink (proposta: `open`, `matched`, `confirmed`, `in_progress`,
-  `completed`, `cancelled` — a validar).
 - Módulo de "capacitação contínua" citado no pitch deck — fica fora do MVP por padrão até
   definição de escopo.
+- Regra de conclusão do Flink (quem confirma a execução: empresa, profissional ou ambos?)
+  e o que acontece com a reputação/pagamento nesse momento — a decidir na Fase 4/5.
 
 ## Referência
 

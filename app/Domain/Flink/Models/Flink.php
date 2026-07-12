@@ -4,10 +4,12 @@ namespace App\Domain\Flink\Models;
 
 use App\Domain\Company\Models\Company;
 use App\Domain\Flink\Enums\FlinkStatus;
+use App\Domain\Match\Models\FlinkMatch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Flink extends Model
 {
@@ -45,6 +47,11 @@ class Flink extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function matches(): HasMany
+    {
+        return $this->hasMany(FlinkMatch::class);
     }
 
     public function scopeActive(Builder $query): Builder

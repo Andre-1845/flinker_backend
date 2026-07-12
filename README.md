@@ -17,12 +17,12 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 
 ## Status
 
-🚧 Fase 2 — Flink + Precificação + Geolocalização (em andamento)
+🚧 Fase 3 — Match + Agenda + Check-in (em andamento)
 
 - [x] Fase 0 — Estrutura Laravel + módulos de domínio + PostgreSQL + Sanctum
 - [x] Fase 1 — Perfis (User, Professional, Company): migrations, models, cadastro e login
 - [x] Fase 2 — Flink, PricingService (margem fixa configurável) e filtro por geolocalização
-- [ ] Fase 3 — Match + Agenda + Check-in
+- [x] Fase 3 — Match (interesse/aceite/confirmação), Agenda e Check-in geolocalizado
 - [ ] Fase 4 — Carteira e Pagamento (Mercado Pago)
 - [ ] Fase 5 — Reputação e Avaliações
 - [ ] Fase 6 — Admin e Infraestrutura
@@ -51,6 +51,14 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 | POST | `/api/flinks` | Sim (empresa) | Cria um Flink — margem calculada automaticamente |
 | PUT | `/api/flinks/{id}` | Sim (dono ou admin) | Atualiza um Flink (recalcula margem se `net_value` mudar) |
 | DELETE | `/api/flinks/{id}` | Sim (dono ou admin) | Remove um Flink (só se ainda editável) |
+| GET | `/api/matches` | Sim | Lista matches (filtrado pelo papel do usuário logado) |
+| POST | `/api/matches` | Sim (profissional) | Demonstra interesse em um Flink (`flink_id`) |
+| PUT | `/api/matches/{id}/accept` | Sim (empresa dona) | Aceita um candidato (rejeita os demais pendentes) |
+| PUT | `/api/matches/{id}/confirm` | Sim (profissional) | Confirma o aceite mútuo (bloqueia a agenda) |
+| POST | `/api/matches/{id}/checkin` | Sim (profissional) | Check-in geolocalizado (`latitude`, `longitude`) |
+| PUT | `/api/matches/{id}/cancel` | Sim (dono ou admin) | Cancela o match (libera agenda se já confirmado) |
+| GET | `/api/schedule` | Sim (profissional) | Lista os bloqueios de agenda do profissional logado |
+| POST | `/api/schedule/block` | Sim (profissional) | Cria um bloqueio manual (indisponibilidade) |
 
 Autenticação via Sanctum: envie o token retornado no login/cadastro como
 `Authorization: Bearer {token}` nas rotas protegidas.
