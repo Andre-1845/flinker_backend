@@ -4,9 +4,12 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\FlinkController;
 use App\Http\Controllers\Api\MatchController;
+use App\Http\Controllers\Api\MercadoPagoWebhookController;
 use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +32,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
+// Fase 4 - Webhook do Mercado Pago (público — o Mercado Pago não tem token Sanctum)
+Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class);
+
 // Rotas autenticadas (todas as demais, protegidas por Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -46,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Fase 2 - Flinks
     Route::get('/flinks/active', [FlinkController::class, 'active']);
     Route::get('/flinks/company/{company}', [FlinkController::class, 'byCompany']);
+    Route::put('/flinks/{flink}/complete', [FlinkController::class, 'complete']);
     Route::apiResource('flinks', FlinkController::class);
 
     // Fase 3 - Matches
@@ -61,10 +68,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/schedule/block', [ScheduleController::class, 'block']);
 
     // Fase 4 - Carteira e Transações
-    // Route::get('/wallet', [WalletController::class, 'show']);
-    // Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
-    // Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
-    // Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/wallet', [WalletController::class, 'show']);
+    Route::post('/wallet/deposit', [WalletController::class, 'deposit']);
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    // ⚠️ Só funciona com APP_ENV=local — ver aviso no WalletController::devTopup()
+    Route::post('/wallet/dev-topup', [WalletController::class, 'devTopup']);
 
     // Fase 5 - Reputação
     // Route::post('/ratings', [RatingController::class, 'store']);

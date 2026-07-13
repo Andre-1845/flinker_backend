@@ -57,6 +57,27 @@
       }]
     },
     {
+      "name": "2b. Empresa deposita saldo (dev-topup, só local)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{company_token}}" }
+        ],
+        "url": "{{base_url}}/wallet/dev-topup",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 1000\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "pm.test('Status 200', () => pm.response.to.have.status(200));"
+        ]}
+      }]
+    },
+    {
       "name": "3. Empresa cria um Flink",
       "request": {
         "method": "POST",
@@ -195,6 +216,36 @@
           "raw": "{\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
         }
       }
+    },
+    {
+      "name": "10. Empresa confirma execução (split de pagamento)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Authorization", "value": "Bearer {{company_token}}" }],
+        "url": "{{base_url}}/flinks/{{flink_id}}/complete"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.test('Flink concluido', () => pm.expect(data.data.status).to.eql('completed'));"
+        ]}
+      }]
+    },
+    {
+      "name": "11. Profissional confere a carteira (deve ter recebido o net_value)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{professional_token}}" }],
+        "url": "{{base_url}}/wallet"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "const data = pm.response.json();",
+          "pm.test('Saldo = 200 (net_value do Flink)', () => pm.expect(data.data.balance).to.eql(200));"
+        ]}
+      }]
     }
   ]
 }

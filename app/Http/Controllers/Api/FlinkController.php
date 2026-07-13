@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Company\Models\Company;
+use App\Domain\Flink\Actions\CompleteFlinkAction;
 use App\Domain\Flink\Actions\CreateFlinkAction;
 use App\Domain\Flink\Actions\UpdateFlinkAction;
+use App\Domain\Flink\Enums\FlinkStatus;
 use App\Domain\Flink\Models\Flink;
+use App\Domain\Wallet\Actions\RefundFlinkReservationAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Flink\StoreFlinkRequest;
 use App\Http\Requests\Flink\UpdateFlinkRequest;
@@ -75,23 +78,43 @@ class FlinkController extends Controller
         return response()->json(['data' => new FlinkResource($flink->load('company'))], 201);
     }
 
-    public function update(UpdateFlinkRequest $request, Flink $flink, UpdateFlinkAction $action): JsonResponse
+    public function update(UpdateFlinkRequest $request, Flink $flink, UpdateFlinkAction $action, RefundFlinkReservationAction $refundAction): JsonResponse
     {
         $this->authorizeOwnership($request, $flink);
 
         abort_unless($flink->status->isEditable(), 422, 'Este Flink não pode mais ser editado no estado atual.');
 
+        $willCancel = ($request->validated('status') ?? null) === FlinkStatus::Cancelled->value;
+
         $flink = $action->handle($flink, $request->validated());
+
+        if ($willCancel) {
+            $refundAction->handle($flink);
+        }
 
         return response()->json(['data' => new FlinkResource($flink->load('company'))]);
     }
 
-    public function destroy(Request $request, Flink $flink): JsonResponse
+    /**
+     * Empresa confirma que o serviço foi executado — dispara o split de pagamento
+     * (profissional recebe o valor líquido, margem fica registrada pra plataforma).
+     */
+    public function complete(Request $request, Flink $flink, CompleteFlinkAction $action): JsonResponse
+    {
+        $this->authorizeOwnership($request, $flink);
+
+        $flink = $action->handle($flink);
+
+        return response()->json(['data' => new FlinkResource($flink->load('company'))]);
+    }
+
+    public function destroy(Request $request, Flink $flink, RefundFlinkReservationAction $refundAction): JsonResponse
     {
         $this->authorizeOwnership($request, $flink);
 
         abort_unless($flink->status->isEditable(), 422, 'Este Flink não pode mais ser removido no estado atual.');
 
+        $refundAction->handle($flink);
         $flink->delete();
 
         return response()->json(['message' => 'Flink removido com sucesso.']);

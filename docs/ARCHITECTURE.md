@@ -102,11 +102,47 @@ Cada módulo de domínio segue a mesma subestrutura:
 - **Cancelamento**: cancelar um match `Confirmed` libera o bloqueio de agenda e reabre
   o Flink (`Open`) para novos candidatos.
 
+### Carteira e Pagamento (Fase 4 — decidido)
+- **Todo usuário ganha uma `Wallet` automaticamente no cadastro** (saldo zero).
+- **Pagamento garantido no ato da publicação**: ao criar um Flink, o valor total
+  (`total_value`) é debitado imediatamente da carteira da empresa como uma "reserva"
+  (`Transaction` tipo `reservation`) — se o saldo for insuficiente, a criação do Flink
+  inteira é revertida (mesma transação de banco, ver `CreateFlinkAction`). Isso reflete a
+  decisão de produto já sinalizada no frontend: "o pagamento só é liberado após a execução,
+  mas precisa estar garantido antes de publicar".
+- **Split no `PUT /flinks/{id}/complete`**: quando a empresa confirma a execução, o
+  profissional recebe o `net_value` na própria carteira (`Transaction` tipo `earning`), e a
+  margem fica registrada como receita da plataforma (`Transaction` tipo `platform_fee`,
+  sem `wallet_id` — não pertence a nenhum usuário, é só um registro contábil).
+- **Cancelamento devolve a reserva**: cancelar ou remover um Flink que ainda tinha
+  reserva ativa credita o valor de volta pra empresa (`RefundFlinkReservationAction`),
+  com proteção contra reembolso duplicado.
+- **Depósito via Mercado Pago (Checkout Pro)**: `POST /wallet/deposit` cria uma
+  preferência de pagamento e retorna a URL de checkout; o saldo só é creditado quando o
+  webhook (`POST /webhooks/mercadopago`) confirmar que o pagamento foi aprovado — e o
+  webhook sempre reconsulta a API do Mercado Pago pra confirmar o status, nunca confia
+  só no corpo da notificação (proteção contra spoofing).
+- **Saque (`POST /wallet/withdraw`)**: só profissionais, por enquanto. O valor é debitado
+  imediatamente (evita saque duplicado do mesmo saldo) mas a transação fica `pending` —
+  **a integração de payout via Pix do Mercado Pago ainda não foi implementada** (exige
+  aprovação de conta business); por enquanto a confirmação seria manual, via um endpoint
+  de admin a construir na Fase 6.
+- **Endpoint de teste local** (`POST /wallet/dev-topup`, só funciona com `APP_ENV=local`):
+  credita saldo direto, sem passar pelo Mercado Pago — necessário porque testar o fluxo
+  de depósito de ponta a ponta exige um túnel público (ngrok) pro webhook, que não estava
+  disponível neste ambiente de desenvolvimento.
+
 ### Pendências a decidir com o cliente
 - Módulo de "capacitação contínua" citado no pitch deck — fica fora do MVP por padrão até
   definição de escopo.
-- Regra de conclusão do Flink (quem confirma a execução: empresa, profissional ou ambos?)
-  e o que acontece com a reputação/pagamento nesse momento — a decidir na Fase 4/5.
+- ~~Regra de conclusão do Flink~~ — decidido: a empresa confirma via `PUT /flinks/{id}/complete`
+  (ver seção acima). Falta decidir se o profissional também precisa confirmar/avaliar antes
+  do split acontecer, ou se a confirmação da empresa já é suficiente (como está implementado
+  agora).
+- Payout automático via Pix (saque) — depende de aprovação de conta business no Mercado
+  Pago; até lá, saques precisam de confirmação manual (Fase 6 — Admin).
+- Feature "empresa dá swipe em profissionais direto" (sem Flink publicado, ver
+  `flinker_app`) — mantida no roadmap do frontend, mas ainda sem endpoint no backend.
 
 ## Referência
 

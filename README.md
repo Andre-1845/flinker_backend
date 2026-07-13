@@ -18,13 +18,13 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 
 ## Status
 
-🚧 Fase 3 — Match + Agenda + Check-in (em andamento)
+🚧 Fase 4 — Carteira e Pagamento (em andamento)
 
 - [x] Fase 0 — Estrutura Laravel + módulos de domínio + PostgreSQL + Sanctum
 - [x] Fase 1 — Perfis (User, Professional, Company): migrations, models, cadastro e login
 - [x] Fase 2 — Flink, PricingService (margem fixa configurável) e filtro por geolocalização
 - [x] Fase 3 — Match (interesse/aceite/confirmação), Agenda e Check-in geolocalizado
-- [ ] Fase 4 — Carteira e Pagamento (Mercado Pago)
+- [x] Fase 4 — Carteira, reserva/split de pagamento e depósito via Mercado Pago (saque ainda manual)
 - [ ] Fase 5 — Reputação e Avaliações
 - [ ] Fase 6 — Admin e Infraestrutura
 
@@ -60,6 +60,13 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 | PUT | `/api/matches/{id}/cancel` | Sim (dono ou admin) | Cancela o match (libera agenda se já confirmado) |
 | GET | `/api/schedule` | Sim (profissional) | Lista os bloqueios de agenda do profissional logado |
 | POST | `/api/schedule/block` | Sim (profissional) | Cria um bloqueio manual (indisponibilidade) |
+| PUT | `/api/flinks/{id}/complete` | Sim (empresa dona) | Confirma execução — dispara o split (profissional recebe, margem fica registrada) |
+| GET | `/api/wallet` | Sim | Saldo da carteira do usuário logado |
+| POST | `/api/wallet/deposit` | Sim | Cria uma preferência de pagamento no Mercado Pago (retorna `checkout_url`) |
+| POST | `/api/wallet/withdraw` | Sim (profissional) | Solicita saque — debita na hora, confirmação de Pix ainda manual |
+| GET | `/api/transactions` | Sim | Histórico de transações da carteira do usuário logado |
+| POST | `/api/wallet/dev-topup` | Sim (só `APP_ENV=local`) | Credita saldo direto pra testar sem Mercado Pago real |
+| POST | `/api/webhooks/mercadopago` | Não (público) | Notificação do Mercado Pago sobre mudança de status de pagamento |
 
 Autenticação via Sanctum: envie o token retornado no login/cadastro como
 `Authorization: Bearer {token}` nas rotas protegidas.

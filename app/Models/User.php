@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Domain\Company\Models\Company;
 use App\Domain\Professional\Models\Professional;
 use App\Domain\Shared\Enums\UserProfile;
+use App\Domain\Wallet\Models\Wallet;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -64,6 +65,11 @@ class User extends Authenticatable
     public function company(): HasOne
     {
         return $this->hasOne(Company::class);
+    }
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
     }
 
     public function isProfessional(): bool

@@ -3,6 +3,48 @@
 Registro cronológico das mudanças, decisões de arquitetura e o motivo de cada uma.
 Para o "estado atual" consolidado (sem histórico), ver `docs/ARCHITECTURE.md`.
 
+## [Fase 4] — Carteira e Pagamento
+
+**Adicionado**
+- Migrations `wallets` e `transactions`.
+- Models `Wallet` e `Transaction`, enums `TransactionType` (`deposit`, `withdrawal`,
+  `reservation`, `refund`, `earning`, `platform_fee`) e `TransactionStatus`.
+- `WalletService` — credita/debita saldo com lock pessimista (`lockForUpdate`), evitando
+  corrida quando duas operações mexem no mesmo saldo ao mesmo tempo. Trata separadamente
+  operações instantâneas (`credit`/`debit`) e pendentes (`createPending`/`debitPending`,
+  usadas em depósito/saque que dependem de confirmação externa).
+- `MercadoPagoService` — integração via API REST direta do Mercado Pago (sem SDK, usando
+  `Illuminate\Support\Facades\Http`). Cria preferência de checkout (depósito) e reconsulta
+  pagamentos por ID. **Nunca testado contra credenciais reais** — ver aviso no próprio
+  arquivo com o passo a passo pra validar antes de produção.
+- Actions: `ReserveFlinkPaymentAction` (debita o total do Flink da empresa na criação),
+  `RefundFlinkReservationAction` (devolve se cancelado, com proteção contra reembolso
+  duplicado), `CompleteFlinkAction` (split: profissional recebe `net_value`, margem vira
+  `platform_fee` sem dono), `DepositAction`, `WithdrawAction`,
+  `ProcessMercadoPagoWebhookAction`.
+- Endpoints: `GET /wallet`, `POST /wallet/deposit`, `POST /wallet/withdraw`,
+  `GET /transactions`, `PUT /flinks/{id}/complete`, `POST /webhooks/mercadopago` (público).
+- `POST /wallet/dev-topup` — endpoint de desenvolvimento (só funciona com `APP_ENV=local`),
+  credita saldo direto sem depender do Mercado Pago. Necessário porque testar o depósito
+  de ponta a ponta exige um túnel público (ngrok) pro webhook, indisponível neste ambiente.
+- Toda conta nova (profissional ou empresa) ganha uma `Wallet` automaticamente no cadastro.
+
+**Decisão de produto implementada**
+- Pagamento é garantido no ato da publicação do Flink: `CreateFlinkAction` debita o
+  `total_value` da carteira da empresa como reserva, na mesma transação de banco que cria
+  o Flink — saldo insuficiente reverte a criação inteira.
+
+**Impacto em fases anteriores**
+- ⚠️ A collection do Postman (Fase 0-3) **para de funcionar sem ajuste**: toda empresa
+  agora precisa ter saldo antes de criar um Flink. Use `POST /wallet/dev-topup` antes do
+  passo "Empresa cria um Flink" pra continuar testando localmente.
+
+**Pendências conhecidas**
+- Saque (`withdraw`) debita o saldo mas não completa o Pix de verdade — falta integração
+  com a API de payout do Mercado Pago (exige conta business aprovada). Confirmação manual
+  fica pra Fase 6 (Admin).
+- `MercadoPagoService` não foi testado contra credenciais reais/sandbox.
+
 ## [Fase 3] — Match, Agenda e Check-in
 
 **Adicionado**
