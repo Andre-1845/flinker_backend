@@ -28,6 +28,9 @@ class Company extends Model
     {
         return [
             'reputation' => 'decimal:2',
+            // Dado financeiro sensível — criptografado em repouso (ver spec original,
+            // seção de segurança: "criptografia de dados sensíveis (senhas, Pix)").
+            'pix_key' => 'encrypted',
         ];
     }
 

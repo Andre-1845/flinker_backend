@@ -1,0 +1,109 @@
+# Stack completa do backend Flinker: nginx (porta pública) -> app (PHP-FPM) ->
+# postgres, mais um worker de fila e o scheduler (que dispara o
+# `flinks:auto-complete` a cada 15 min — ver routes/console.php) como
+# serviços separados da mesma imagem.
+#
+# Uso:
+#   cp .env.example .env  &&  ajuste as credenciais reais (Mercado Pago, etc.)
+#   docker compose up -d --build
+#   docker compose exec app php artisan flinker:make-admin admin@flinker.com "Admin"
+#
+# Isso roda igual numa VPS da Hostinger, em outro provedor, ou localmente —
+# é exatamente o ponto de containerizar (ver auditoria, item de flexibilidade
+# de hospedagem).
+services:
+  app:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "true"
+    env_file:
+      - .env
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - flinker
+
+  nginx:
+    build:
+      context: .
+      target: nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    depends_on:
+      - app
+    networks:
+      - flinker
+
+  queue:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90", "--sleep=3"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "false"
+    env_file:
+      - .env
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - flinker
+
+  scheduler:
+    build:
+      context: .
+      target: app
+    restart: unless-stopped
+    command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      RUN_MIGRATIONS: "false"
+    env_file:
+      - .env
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - flinker
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-flinker}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-flinker}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - flinker
+
+volumes:
+  pgdata:
+  storage:
+
+networks:
+  flinker:
+    driver: bridge

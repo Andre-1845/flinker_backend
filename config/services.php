@@ -42,4 +42,18 @@ return [
         'return_url' => env('MERCADOPAGO_RETURN_URL', env('APP_URL')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Gateway de pagamento ativo
+    |--------------------------------------------------------------------------
+    |
+    | Qual implementação de PaymentGatewayInterface a aplicação usa (ver
+    | App\Providers\PaymentGatewayServiceProvider). Hoje só "mercadopago" existe;
+    | trocar de gateway no futuro é criar uma nova implementação e mudar esse driver.
+    |
+    */
+    'payment_gateway' => [
+        'driver' => env('PAYMENT_GATEWAY_DRIVER', 'mercadopago'),
+    ],
+
 ];

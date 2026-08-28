@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | URL do flinker_app (SPA React). Usado pra montar links que apontam pro
+    | frontend em vez do backend — ex: o link de redefinição de senha enviado por
+    | e-mail (ver App\Providers\AppServiceProvider).
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
