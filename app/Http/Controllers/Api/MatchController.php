@@ -6,6 +6,7 @@ use App\Domain\Flink\Models\Flink;
 use App\Domain\Match\Actions\AcceptMatchAction;
 use App\Domain\Match\Actions\CancelMatchAction;
 use App\Domain\Match\Actions\CheckInAction;
+use App\Domain\Match\Actions\ConfirmCompletionAction;
 use App\Domain\Match\Actions\ConfirmMatchAction;
 use App\Domain\Match\Actions\ExpressInterestAction;
 use App\Domain\Match\Models\FlinkMatch;
@@ -71,6 +72,20 @@ class MatchController extends Controller
         $this->authorizeProfessionalOwnsMatch($request, $match);
 
         $match = $action->handle($match, (float) $request->validated('latitude'), (float) $request->validated('longitude'));
+
+        return response()->json(['data' => new MatchResource($match)]);
+    }
+
+    /**
+     * Profissional confirma que executou o Flink. O split de pagamento só acontece
+     * quando a empresa também confirmar pelo lado dela (`PUT /flinks/{id}/complete`)
+     * — ver ConfirmCompletionAction.
+     */
+    public function confirmCompletion(Request $request, FlinkMatch $match, ConfirmCompletionAction $action): JsonResponse
+    {
+        $this->authorizeProfessionalOwnsMatch($request, $match);
+
+        $match = $action->handle($match, 'professional');
 
         return response()->json(['data' => new MatchResource($match)]);
     }

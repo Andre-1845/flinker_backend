@@ -31,6 +31,11 @@ class Professional extends Model
         return [
             'is_mei' => 'boolean',
             'reputation' => 'decimal:2',
+            // Dado financeiro sensível — criptografado em repouso (ver spec original,
+            // seção de segurança: "criptografia de dados sensíveis (senhas, Pix)").
+            // A coluna foi alargada pra `text` na migration correspondente porque o
+            // valor cifrado é bem maior que o texto original.
+            'pix_key' => 'encrypted',
         ];
     }
 

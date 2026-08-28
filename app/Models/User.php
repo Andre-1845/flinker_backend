@@ -8,13 +8,15 @@ use App\Domain\Professional\Models\Professional;
 use App\Domain\Shared\Enums\UserProfile;
 use App\Domain\Wallet\Models\Wallet;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -85,5 +87,15 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->profile === UserProfile::Admin;
+    }
+
+    /**
+     * Só perfil `admin` e conta ativa entram no painel Filament (`/admin`) — a mesma
+     * regra de perfil exclusivo por conta do resto da aplicação, sem guard/tabela
+     * separada só pra administradores.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isAdmin() && $this->is_active;
     }
 }

@@ -16,6 +16,8 @@ class MatchResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'checked_in_at' => $this->checked_in_at,
+            'professional_confirmed_at' => $this->professional_confirmed_at,
+            'company_confirmed_at' => $this->company_confirmed_at,
             'flink' => new FlinkResource($this->whenLoaded('flink')),
             'professional' => new ProfessionalResource($this->whenLoaded('professional')),
             'created_at' => $this->created_at,

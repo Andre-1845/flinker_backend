@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Company\Models\Company;
-use App\Domain\Flink\Actions\CompleteFlinkAction;
 use App\Domain\Flink\Actions\CreateFlinkAction;
 use App\Domain\Flink\Actions\UpdateFlinkAction;
 use App\Domain\Flink\Enums\FlinkStatus;
 use App\Domain\Flink\Models\Flink;
+use App\Domain\Match\Actions\ConfirmCompletionAction;
+use App\Domain\Match\Enums\MatchStatus;
 use App\Domain\Wallet\Actions\RefundFlinkReservationAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Flink\StoreFlinkRequest;
@@ -96,16 +97,21 @@ class FlinkController extends Controller
     }
 
     /**
-     * Empresa confirma que o serviço foi executado — dispara o split de pagamento
-     * (profissional recebe o valor líquido, margem fica registrada pra plataforma).
+     * Empresa confirma que o serviço foi executado. O split de pagamento só
+     * acontece quando o profissional também confirmar pelo lado dele
+     * (`PUT /matches/{id}/confirm-completion`) — ver ConfirmCompletionAction. Se só
+     * um dos dois confirmar, o comando agendado `flinks:auto-complete` fecha
+     * automaticamente depois do prazo configurado.
      */
-    public function complete(Request $request, Flink $flink, CompleteFlinkAction $action): JsonResponse
+    public function complete(Request $request, Flink $flink, ConfirmCompletionAction $action): JsonResponse
     {
         $this->authorizeOwnership($request, $flink);
 
-        $flink = $action->handle($flink);
+        $match = $flink->matches()->where('status', MatchStatus::Confirmed)->firstOrFail();
 
-        return response()->json(['data' => new FlinkResource($flink->load('company'))]);
+        $action->handle($match, 'company');
+
+        return response()->json(['data' => new FlinkResource($flink->fresh()->load('company'))]);
     }
 
     public function destroy(Request $request, Flink $flink, RefundFlinkReservationAction $refundAction): JsonResponse

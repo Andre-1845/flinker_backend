@@ -5,14 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Domain\Company\Actions\RegisterCompanyAction;
 use App\Domain\Professional\Actions\RegisterProfessionalAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterCompanyRequest;
 use App\Http\Requests\Auth\RegisterProfessionalRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -56,6 +62,60 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Sessão encerrada com sucesso.']);
+    }
+
+    /**
+     * Dispara o e-mail de redefinição de senha (via `password.reset.url`, ver
+     * AppServiceProvider — o link aponta pro frontend, não pro backend).
+     *
+     * Sempre responde com a mesma mensagem genérica, exista ou não o e-mail — evita
+     * que alguém use esse endpoint pra descobrir se um e-mail está cadastrado.
+     */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $status = Password::sendResetLink($request->only('email'));
+
+        if (! in_array($status, [Password::RESET_LINK_SENT, Password::INVALID_USER], true)) {
+            Log::warning('Falha ao enviar link de redefinição de senha.', [
+                'status' => $status,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Se esse e-mail estiver cadastrado, enviamos um link de redefinição de senha.',
+        ]);
+    }
+
+    /**
+     * Confirma a redefinição de senha a partir do token recebido por e-mail.
+     * Revoga todos os tokens de API existentes do usuário (ex: sessões antigas em
+     * outros dispositivos) — quem redefiniu a senha precisa logar de novo.
+     */
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->forceFill([
+                    'password' => $password, // o cast 'hashed' do model já faz o hash
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                $user->tokens()->delete();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status !== Password::PASSWORD_RESET) {
+            return response()->json([
+                'message' => 'Não foi possível redefinir a senha. O link pode ter expirado — solicite um novo.',
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Senha redefinida com sucesso. Faça login novamente.',
+        ]);
     }
 
     private function respondWithToken(User $user, int $status): JsonResponse

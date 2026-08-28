@@ -2,16 +2,16 @@
 
 namespace App\Domain\Wallet\Actions;
 
+use App\Domain\Wallet\Contracts\PaymentGatewayInterface;
 use App\Domain\Wallet\Enums\TransactionType;
 use App\Domain\Wallet\Models\Wallet;
-use App\Domain\Wallet\Services\MercadoPagoService;
 use App\Domain\Wallet\Services\WalletService;
 
 class DepositAction
 {
     public function __construct(
         private readonly WalletService $walletService,
-        private readonly MercadoPagoService $mercadoPago,
+        private readonly PaymentGatewayInterface $paymentGateway,
     ) {}
 
     /**
@@ -19,10 +19,10 @@ class DepositAction
      */
     public function handle(Wallet $wallet, float $amount): array
     {
-        $externalReference = $this->mercadoPago->generateExternalReference();
+        $externalReference = $this->paymentGateway->generateExternalReference();
 
         // Registra a transação como pendente — só vira 'completed' (e credita o saldo)
-        // quando o webhook do Mercado Pago confirmar o pagamento (ver ProcessMercadoPagoWebhookAction).
+        // quando o webhook do gateway confirmar o pagamento (ver ProcessPaymentWebhookAction).
         $this->walletService->createPending(
             $wallet,
             $amount,
@@ -30,7 +30,7 @@ class DepositAction
             $externalReference,
         );
 
-        $preference = $this->mercadoPago->createDepositPreference($wallet, $amount, $externalReference);
+        $preference = $this->paymentGateway->createDepositPreference($wallet, $amount, $externalReference);
 
         return ['checkout_url' => $preference['checkout_url']];
     }

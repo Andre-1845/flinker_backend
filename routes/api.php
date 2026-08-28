@@ -26,14 +26,20 @@ use Illuminate\Support\Facades\Route;
 Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'flinker-api']));
 
 // Fase 1 - Autenticação (público)
-Route::prefix('auth')->group(function () {
+// Rate limit dedicado (não o `throttle:api` global) — protege contra força bruta de
+// senha e spam de cadastro. 6 tentativas/minuto por IP é folgado pra uso legítimo.
+Route::prefix('auth')->middleware('throttle:6,1')->group(function () {
     Route::post('/register/professional', [AuthController::class, 'registerProfessional']);
     Route::post('/register/company', [AuthController::class, 'registerCompany']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
-// Fase 4 - Webhook do Mercado Pago (público — o Mercado Pago não tem token Sanctum)
-Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class);
+// Fase 4 - Webhook do Mercado Pago (público — o Mercado Pago não tem token Sanctum).
+// Rate limit generoso (o Mercado Pago pode reenviar notificações), só pra evitar abuso.
+Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
+    ->middleware('throttle:30,1');
 
 // Rotas autenticadas (todas as demais, protegidas por Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
@@ -61,6 +67,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/matches/{match}/accept', [MatchController::class, 'accept']);
     Route::put('/matches/{match}/confirm', [MatchController::class, 'confirm']);
     Route::post('/matches/{match}/checkin', [MatchController::class, 'checkin']);
+    // Conclusão dupla (Fase 4 revisada): profissional confirma aqui, empresa confirma
+    // em PUT /flinks/{id}/complete — o split de pagamento só roda com os dois confirmados.
+    Route::put('/matches/{match}/confirm-completion', [MatchController::class, 'confirmCompletion']);
     Route::put('/matches/{match}/cancel', [MatchController::class, 'cancel']);
 
     // Fase 3 - Agenda

@@ -22,6 +22,8 @@ class FlinkMatch extends Model
         'checked_in_at',
         'checkin_latitude',
         'checkin_longitude',
+        'professional_confirmed_at',
+        'company_confirmed_at',
     ];
 
     protected function casts(): array
@@ -31,6 +33,8 @@ class FlinkMatch extends Model
             'checked_in_at' => 'datetime',
             'checkin_latitude' => 'decimal:7',
             'checkin_longitude' => 'decimal:7',
+            'professional_confirmed_at' => 'datetime',
+            'company_confirmed_at' => 'datetime',
         ];
     }
 
@@ -42,5 +46,15 @@ class FlinkMatch extends Model
     public function professional(): BelongsTo
     {
         return $this->belongsTo(Professional::class);
+    }
+
+    /**
+     * Os dois lados já confirmaram a conclusão? Se sim, o split de pagamento já
+     * deveria ter acontecido (ver ConfirmCompletionAction) — este helper serve
+     * principalmente pra exibição no frontend/admin.
+     */
+    public function isFullyConfirmed(): bool
+    {
+        return $this->professional_confirmed_at !== null && $this->company_confirmed_at !== null;
     }
 }
