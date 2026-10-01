@@ -5,7 +5,7 @@ de referência entre sessões de trabalho.
 
 ## Stack
 
-- **Framework**: Laravel 12 (PHP 8.2+) — alinhado com os demais projetos da equipe
+- **Framework**: Laravel 12 (PHP 8.4+) — alinhado com os demais projetos da equipe
 - **Banco de dados**: PostgreSQL
 - **Autenticação**: Laravel Sanctum (tokens de API + suporte a SPA stateful para o painel React)
 - **Gateway de pagamento**: Mercado Pago (split de pagamento + PIX) — a confirmar na Fase 4
@@ -14,6 +14,7 @@ de referência entre sessões de trabalho.
 ## Por que Laravel em vez de .NET (proposto na spec original)?
 
 A especificação técnica original sugeria .NET Core (DDD modular). Optamos por Laravel porque:
+
 - É a stack de maior domínio da equipe atual, priorizando velocidade de entrega no MVP.
 - A estrutura de módulos de domínio (`app/Domain/*`) preserva a essência da arquitetura DDD
   da spec original, sem a sobrecarga de configuração do .NET.
@@ -47,6 +48,7 @@ app/
 ```
 
 Cada módulo de domínio segue a mesma subestrutura:
+
 - `Models/` — Eloquent models e Value Objects do módulo
 - `Services/` — regras de negócio que não pertencem a um único model (ex: `PricingService`)
 - `Actions/` — casos de uso isolados (ex: `CreateFlinkAction`, `AcceptMatchAction`)
@@ -60,6 +62,7 @@ Cada módulo de domínio segue a mesma subestrutura:
 ## Decisões de negócio confirmadas
 
 ### Precificação (Fase 2)
+
 - **Margem fixa de 7%** sobre o valor líquido informado pela empresa, por enquanto.
 - A regra fica isolada num `PricingService` único, com a margem vindo de configuração
   (`PLATFORM_DEFAULT_MARGIN_PERCENT` no `.env`, com plano de migrar para uma tabela
@@ -69,12 +72,14 @@ Cada módulo de domínio segue a mesma subestrutura:
   do sistema.
 
 ### Geolocalização (Fase 2 e 3)
+
 - `Flink` armazena `latitude`/`longitude` do local do serviço.
 - O aceite do Match inclui uma etapa de **check-in geolocalizado**: o profissional confirma
   presença comparando sua localização atual com a do Flink, dentro de um raio de tolerância
   configurável (sugestão inicial: 150m).
 
 ### Perfis de usuário (Fase 1 — decidido)
+
 - Perfil é **exclusivo por conta**: cada `User` tem um único `profile` (`professional`,
   `company` ou `admin`), definido no cadastro e imutável depois (não há endpoint de troca
   de perfil no MVP). Alguém que queira atuar dos dois lados cria duas contas com emails
@@ -82,6 +87,7 @@ Cada módulo de domínio segue a mesma subestrutura:
 - Cadastro e login são só por email/senha por enquanto (sem login social).
 
 ### Match, Agenda e Check-in (Fase 3 — decidido)
+
 - **Regra de desempate**: quando a empresa aceita um candidato (`Accepted`), todos os
   demais matches `Pending` no mesmo Flink são automaticamente marcados como `Rejected`.
   Simples e direto para o MVP — pode evoluir para um ranking mais sofisticado depois.
@@ -103,6 +109,7 @@ Cada módulo de domínio segue a mesma subestrutura:
   o Flink (`Open`) para novos candidatos.
 
 ### Carteira e Pagamento (Fase 4 — decidido)
+
 - **Todo usuário ganha uma `Wallet` automaticamente no cadastro** (saldo zero).
 - **Pagamento garantido no ato da publicação**: ao criar um Flink, o valor total
   (`total_value`) é debitado imediatamente da carteira da empresa como uma "reserva"
@@ -133,6 +140,7 @@ Cada módulo de domínio segue a mesma subestrutura:
   disponível neste ambiente de desenvolvimento.
 
 ### Pendências a decidir com o cliente
+
 - Módulo de "capacitação contínua" citado no pitch deck — fica fora do MVP por padrão até
   definição de escopo.
 - ~~Regra de conclusão do Flink~~ — decidido: a empresa confirma via `PUT /flinks/{id}/complete`
@@ -147,5 +155,6 @@ Cada módulo de domínio segue a mesma subestrutura:
 ## Referência
 
 Os documentos originais do projeto estão em `docs/`:
+
 - `technical-spec-original.md` — especificação técnica completa fornecida pelo cliente
 - `pitch-deck-summary.md` — resumo do pitch deck (contexto de negócio e produto)
