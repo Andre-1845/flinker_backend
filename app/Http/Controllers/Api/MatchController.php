@@ -23,7 +23,7 @@ class MatchController extends Controller
     {
         $user = $request->user();
 
-        $query = FlinkMatch::query()->with(['flink', 'professional']);
+        $query = FlinkMatch::query()->with(['flink', 'professional.user']);
 
         if ($user->isProfessional()) {
             $query->where('professional_id', $user->professional->id);
