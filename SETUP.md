@@ -6,7 +6,7 @@ ir pro Git). Siga os passos abaixo na sua máquina.
 
 ## Pré-requisitos
 
-- PHP 8.2+ (testado com 8.2.4)
+- PHP 8.4+ (testado com 8.4)
 - Composer 2.x
 - PostgreSQL 14+ rodando localmente (ou via Docker)
 - Node.js 20+ (só necessário se for mexer nos assets do painel web futuramente)

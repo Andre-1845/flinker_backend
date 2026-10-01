@@ -6,7 +6,7 @@ reputação.
 
 ## Stack
 
-Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamentos, a confirmar)
+Laravel 12 (PHP 8.4+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamentos, a confirmar)
 
 ## Documentação
 
@@ -30,43 +30,43 @@ Laravel 12 (PHP 8.2+) · PostgreSQL · Sanctum (auth) · Mercado Pago (pagamento
 
 ## Endpoints disponíveis
 
-| Método | Rota | Autenticação | Descrição |
-|---|---|---|---|
-| GET | `/api/ping` | Não | Healthcheck |
-| POST | `/api/auth/register/professional` | Não | Cadastro de profissional |
-| POST | `/api/auth/register/company` | Não | Cadastro de empresa |
-| POST | `/api/auth/login` | Não | Login (retorna token Sanctum) |
-| POST | `/api/auth/logout` | Sim | Encerra a sessão/token atual |
-| GET | `/api/users/me` | Sim | Dados do usuário autenticado |
-| PUT | `/api/users/me` | Sim | Atualiza nome/email |
-| GET | `/api/professionals` | Sim | Lista profissionais (paginado, filtro `min_reputation`) |
-| GET | `/api/professionals/{id}` | Sim | Detalhe de um profissional |
-| PUT | `/api/professionals/{id}` | Sim | Atualiza o próprio perfil (ou admin) |
-| GET | `/api/companies` | Sim | Lista empresas (paginado, filtro `min_reputation`) |
-| GET | `/api/companies/{id}` | Sim | Detalhe de uma empresa |
-| PUT | `/api/companies/{id}` | Sim | Atualiza a própria empresa (ou admin) |
-| GET | `/api/flinks` | Sim | Lista Flinks (paginado, filtro `latitude`/`longitude`/`radius_km`) |
-| GET | `/api/flinks/active` | Sim | Flinks com status `open`, mesmos filtros de geolocalização |
-| GET | `/api/flinks/company/{company}` | Sim | Flinks de uma empresa específica |
-| GET | `/api/flinks/{id}` | Sim | Detalhe de um Flink |
-| POST | `/api/flinks` | Sim (empresa) | Cria um Flink — margem calculada automaticamente |
-| PUT | `/api/flinks/{id}` | Sim (dono ou admin) | Atualiza um Flink (recalcula margem se `net_value` mudar) |
-| DELETE | `/api/flinks/{id}` | Sim (dono ou admin) | Remove um Flink (só se ainda editável) |
-| GET | `/api/matches` | Sim | Lista matches (filtrado pelo papel do usuário logado) |
-| POST | `/api/matches` | Sim (profissional) | Demonstra interesse em um Flink (`flink_id`) |
-| PUT | `/api/matches/{id}/accept` | Sim (empresa dona) | Aceita um candidato (rejeita os demais pendentes) |
-| PUT | `/api/matches/{id}/confirm` | Sim (profissional) | Confirma o aceite mútuo (bloqueia a agenda) |
-| POST | `/api/matches/{id}/checkin` | Sim (profissional) | Check-in geolocalizado (`latitude`, `longitude`) |
-| PUT | `/api/matches/{id}/cancel` | Sim (dono ou admin) | Cancela o match (libera agenda se já confirmado) |
-| GET | `/api/schedule` | Sim (profissional) | Lista os bloqueios de agenda do profissional logado |
-| POST | `/api/schedule/block` | Sim (profissional) | Cria um bloqueio manual (indisponibilidade) |
-| PUT | `/api/flinks/{id}/complete` | Sim (empresa dona) | Confirma execução — dispara o split (profissional recebe, margem fica registrada) |
-| GET | `/api/wallet` | Sim | Saldo da carteira do usuário logado |
-| POST | `/api/wallet/deposit` | Sim | Cria uma preferência de pagamento no Mercado Pago (retorna `checkout_url`) |
-| POST | `/api/wallet/withdraw` | Sim (profissional) | Solicita saque — debita na hora, confirmação de Pix ainda manual |
-| GET | `/api/transactions` | Sim | Histórico de transações da carteira do usuário logado |
-| POST | `/api/wallet/dev-topup` | Sim (só `APP_ENV=local`) | Credita saldo direto pra testar sem Mercado Pago real |
-| POST | `/api/webhooks/mercadopago` | Não (público) | Notificação do Mercado Pago sobre mudança de status de pagamento |
+| Método | Rota                              | Autenticação             | Descrição                                                                         |
+| ------ | --------------------------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| GET    | `/api/ping`                       | Não                      | Healthcheck                                                                       |
+| POST   | `/api/auth/register/professional` | Não                      | Cadastro de profissional                                                          |
+| POST   | `/api/auth/register/company`      | Não                      | Cadastro de empresa                                                               |
+| POST   | `/api/auth/login`                 | Não                      | Login (retorna token Sanctum)                                                     |
+| POST   | `/api/auth/logout`                | Sim                      | Encerra a sessão/token atual                                                      |
+| GET    | `/api/users/me`                   | Sim                      | Dados do usuário autenticado                                                      |
+| PUT    | `/api/users/me`                   | Sim                      | Atualiza nome/email                                                               |
+| GET    | `/api/professionals`              | Sim                      | Lista profissionais (paginado, filtro `min_reputation`)                           |
+| GET    | `/api/professionals/{id}`         | Sim                      | Detalhe de um profissional                                                        |
+| PUT    | `/api/professionals/{id}`         | Sim                      | Atualiza o próprio perfil (ou admin)                                              |
+| GET    | `/api/companies`                  | Sim                      | Lista empresas (paginado, filtro `min_reputation`)                                |
+| GET    | `/api/companies/{id}`             | Sim                      | Detalhe de uma empresa                                                            |
+| PUT    | `/api/companies/{id}`             | Sim                      | Atualiza a própria empresa (ou admin)                                             |
+| GET    | `/api/flinks`                     | Sim                      | Lista Flinks (paginado, filtro `latitude`/`longitude`/`radius_km`)                |
+| GET    | `/api/flinks/active`              | Sim                      | Flinks com status `open`, mesmos filtros de geolocalização                        |
+| GET    | `/api/flinks/company/{company}`   | Sim                      | Flinks de uma empresa específica                                                  |
+| GET    | `/api/flinks/{id}`                | Sim                      | Detalhe de um Flink                                                               |
+| POST   | `/api/flinks`                     | Sim (empresa)            | Cria um Flink — margem calculada automaticamente                                  |
+| PUT    | `/api/flinks/{id}`                | Sim (dono ou admin)      | Atualiza um Flink (recalcula margem se `net_value` mudar)                         |
+| DELETE | `/api/flinks/{id}`                | Sim (dono ou admin)      | Remove um Flink (só se ainda editável)                                            |
+| GET    | `/api/matches`                    | Sim                      | Lista matches (filtrado pelo papel do usuário logado)                             |
+| POST   | `/api/matches`                    | Sim (profissional)       | Demonstra interesse em um Flink (`flink_id`)                                      |
+| PUT    | `/api/matches/{id}/accept`        | Sim (empresa dona)       | Aceita um candidato (rejeita os demais pendentes)                                 |
+| PUT    | `/api/matches/{id}/confirm`       | Sim (profissional)       | Confirma o aceite mútuo (bloqueia a agenda)                                       |
+| POST   | `/api/matches/{id}/checkin`       | Sim (profissional)       | Check-in geolocalizado (`latitude`, `longitude`)                                  |
+| PUT    | `/api/matches/{id}/cancel`        | Sim (dono ou admin)      | Cancela o match (libera agenda se já confirmado)                                  |
+| GET    | `/api/schedule`                   | Sim (profissional)       | Lista os bloqueios de agenda do profissional logado                               |
+| POST   | `/api/schedule/block`             | Sim (profissional)       | Cria um bloqueio manual (indisponibilidade)                                       |
+| PUT    | `/api/flinks/{id}/complete`       | Sim (empresa dona)       | Confirma execução — dispara o split (profissional recebe, margem fica registrada) |
+| GET    | `/api/wallet`                     | Sim                      | Saldo da carteira do usuário logado                                               |
+| POST   | `/api/wallet/deposit`             | Sim                      | Cria uma preferência de pagamento no Mercado Pago (retorna `checkout_url`)        |
+| POST   | `/api/wallet/withdraw`            | Sim (profissional)       | Solicita saque — debita na hora, confirmação de Pix ainda manual                  |
+| GET    | `/api/transactions`               | Sim                      | Histórico de transações da carteira do usuário logado                             |
+| POST   | `/api/wallet/dev-topup`           | Sim (só `APP_ENV=local`) | Credita saldo direto pra testar sem Mercado Pago real                             |
+| POST   | `/api/webhooks/mercadopago`       | Não (público)            | Notificação do Mercado Pago sobre mudança de status de pagamento                  |
 
 Autenticação via Sanctum: envie o token retornado no login/cadastro como
 `Authorization: Bearer {token}` nas rotas protegidas.

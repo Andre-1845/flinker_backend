@@ -41,7 +41,7 @@ COPY vite.config.js ./
 RUN npm run build
 
 # ---- estágio 3: imagem PHP-FPM base com extensões ---------------------------
-FROM php:8.2-fpm-alpine AS php-base
+FROM php:8.4-fpm-alpine AS php-base
 
 # Nota sobre Redis: a extensão pecl/redis foi deixada de fora de propósito.
 # Hoje QUEUE_CONNECTION, CACHE_STORE e SESSION_DRIVER são todos "database"

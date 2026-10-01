@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProfessionalResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProfessionalController extends Controller
 {
@@ -38,6 +40,35 @@ class ProfessionalController extends Controller
         ]);
 
         $professional->update($validated);
+
+        return response()->json(['data' => new ProfessionalResource($professional->fresh())]);
+    }
+
+    /**
+     * Upload da foto de perfil (achado da auditoria 2026-10-01: a tela de perfil já
+     * tinha o botão de câmera, mas ele só gerava uma prévia local em memória — nunca
+     * persistia nada, nem no backend nem entre sessões). Recebe o arquivo já recortado
+     * pelo Cropper.js no frontend, então salva como veio, sem reprocessar.
+     */
+    public function uploadPhoto(Request $request, Professional $professional): JsonResponse
+    {
+        $this->authorizeOwnership($request, $professional);
+
+        $request->validate([
+            'photo' => ['required', 'image', 'max:5120'], // 5MB
+        ]);
+
+        // Apaga a foto antiga pra não acumular lixo no disco 'public'.
+        if ($professional->photo_url) {
+            $oldPath = Str::after($professional->photo_url, '/storage/');
+            if ($oldPath !== $professional->photo_url) {
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
+
+        $path = $request->file('photo')->store('professionals/' . $professional->id, 'public');
+
+        $professional->update(['photo_url' => Storage::disk('public')->url($path)]);
 
         return response()->json(['data' => new ProfessionalResource($professional->fresh())]);
     }

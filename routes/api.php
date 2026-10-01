@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\MercadoPagoWebhookController;
 use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\ScheduleController;
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\WalletController;
@@ -51,6 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Fase 1 - Profissionais
     Route::apiResource('professionals', ProfessionalController::class)->only(['index', 'show', 'update']);
+    // Achado auditoria 2026-10-01: upload de foto nunca existiu no backend — o
+    // botão de câmera do frontend só gerava uma prévia local, sem persistir nada.
+    Route::post('/professionals/{professional}/photo', [ProfessionalController::class, 'uploadPhoto']);
 
     // Fase 1 - Empresas
     Route::apiResource('companies', CompanyController::class)->only(['index', 'show', 'update']);
@@ -83,6 +87,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index']);
     // ⚠️ Só funciona com APP_ENV=local — ver aviso no WalletController::devTopup()
     Route::post('/wallet/dev-topup', [WalletController::class, 'devTopup']);
+
+    // Achado #15 (auditoria 2026-10-01): margem da plataforma configurável via
+    // Filament (ver SettingsService) — o frontend precisa saber o valor atual
+    // em vez de ter o percentual hardcoded (estava errado: 8% vs 7% real).
+    Route::get('/settings/platform-margin', [SettingController::class, 'platformMargin']);
 
     // Fase 5 - Reputação
     // Route::post('/ratings', [RatingController::class, 'store']);
