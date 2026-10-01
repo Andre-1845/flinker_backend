@@ -3,6 +3,61 @@
 Registro cronológico das mudanças, decisões de arquitetura e o motivo de cada uma.
 Para o "estado atual" consolidado (sem histórico), ver `docs/ARCHITECTURE.md`.
 
+## [Auditoria 2026-10-01] — Teste guiado E2E, margem configurável, carteira real e upload de foto
+
+**Contexto**
+
+- Segunda rodada de auditoria (continuação da rodada anterior, 28/08): teste manual
+  guiado de ponta a ponta, com o cliente operando o app ao vivo e cada sintoma
+  verificado contra código/banco/log real antes de ser tratado como bug. Relatório
+  completo em `claude/auditoria_flinker_261001.md` (projeto Flinker, Claude).
+
+**Adicionado**
+
+- Tabela `settings` (chave/valor genérica) + `SettingsService` + recurso Filament
+  "Configurações" — a margem da plataforma (`platform_margin_percent`) deixa de ser
+  fixa em `config/flinker.php`/`.env` e passa a ser editável em runtime pelo painel
+  admin. `PricingService` resolve o serviço via `app()` (não no construtor) e tem
+  fallback seguro pro valor de config caso a tabela ainda não exista — preserva a
+  compatibilidade com `PricingServiceTest`, que instancia `new PricingService()`
+  direto, sem container, contra SQLite em memória sem migrations.
+- Endpoint `GET /settings/platform-margin` — o frontend parou de hardcodar o
+  percentual (estava divergente: 8% mostrado pra empresa vs 7% realmente cobrado).
+- Endpoint `POST /professionals/{id}/photo` — upload de foto de perfil nunca tinha
+  existido no backend (só aceitava `photo_url` como string pronta). Valida imagem
+  até 5MB, apaga a foto antiga do disco `public`, salva a nova.
+- `ProfessionalResource` passa a expor `name` (via relação `user`) e
+  `MatchController::index` carrega `professional.user` — a empresa agora vê o nome
+  do candidato na tela de Matches.
+
+**Correções**
+
+- `config/app.php`: timezone trocado de `UTC` pra `America/Sao_Paulo` — bloqueava a
+  criação de Flink no mesmo dia.
+- `bootstrap/app.php`: `AuthenticationException` passa a devolver JSON 401 em vez de
+  tentar `route('login')` (que não existe num app 100% API) — mas **só** pras rotas
+  `/api/*`; o guard `admin` do Filament continua com seu próprio redirect pra
+  `/admin/login`. A primeira versão desse fix interceptava toda `AuthenticationException`
+  e quebrou esse redirect — pego pelo próprio PHPUnit do Andre
+  (`AdminPanelAccessTest::guest_is_redirected_to_login`), corrigido no commit seguinte.
+
+**Validado**
+
+- PHPUnit completo rodado pelo Andre: 27 passed, 0 failed (`PricingServiceTest`,
+  `WalletServiceTest`, `AdminPanelAccessTest`, `TransactionApprovalTest`,
+  `FlinkCompletionFlowTest`, `MercadoPagoWebhookSignatureTest`, entre outros).
+- Teste guiado ao vivo: margem editada no Filament refletindo no app; upload de foto
+  com recorte persistindo entre sessões; saldo/extrato reais nos dois lados; saque via
+  Pix debitando na hora e ficando pendente até aprovação manual.
+
+**Pendências conhecidas**
+
+- `php artisan storage:link` precisa ser executado em todo ambiente novo (local,
+  staging, produção) — sem isso a URL da foto de perfil retorna 404 mesmo com o
+  upload salvo corretamente.
+- Sugestão de produto registrada, não implementada: ocultar da visualização os Flinks
+  já concluídos (pedido do Andre durante o teste).
+
 ## [Auditoria] — Hardening de Pagamento, Conclusão Dupla, Painel Admin (Filament) e Docker
 
 **Contexto**
