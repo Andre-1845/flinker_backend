@@ -13,12 +13,14 @@ use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -26,12 +28,16 @@ class AuthController extends Controller
     {
         $user = $action->handle($request->validated());
 
+        $this->sendVerificationEmail($user);
+
         return $this->respondWithToken($user, 201);
     }
 
     public function registerCompany(RegisterCompanyRequest $request, RegisterCompanyAction $action): JsonResponse
     {
         $user = $action->handle($request->validated());
+
+        $this->sendVerificationEmail($user);
 
         return $this->respondWithToken($user, 201);
     }
@@ -116,6 +122,54 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Senha redefinida com sucesso. Faça login novamente.',
         ]);
+    }
+
+    /**
+     * Reenvia o e-mail de confirmação pro usuário logado (ex: o primeiro não chegou
+     * ou o link de 60 minutos expirou).
+     */
+    public function resendVerificationEmail(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Este e-mail já foi confirmado.']);
+        }
+
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (Throwable $e) {
+            Log::error('Falha ao reenviar e-mail de confirmação de conta.', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Não foi possível enviar o e-mail agora. Tente novamente em instantes.',
+            ], 503);
+        }
+
+        return response()->json(['message' => 'Enviamos um novo link de confirmação para o seu e-mail.']);
+    }
+
+    /**
+     * Dispara o evento `Registered` — o Laravel já escuta ele e envia o e-mail de
+     * confirmação (User implementa MustVerifyEmail).
+     *
+     * Chamado depois que a transação do cadastro já fechou: se o SMTP falhar aqui,
+     * a conta continua criada e o cadastro responde 201 normalmente — o usuário
+     * pede o reenvio depois em POST /auth/email/verification-notification.
+     */
+    private function sendVerificationEmail(User $user): void
+    {
+        try {
+            event(new Registered($user));
+        } catch (Throwable $e) {
+            Log::error('Falha ao enviar e-mail de confirmação de conta.', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function respondWithToken(User $user, int $status): JsonResponse

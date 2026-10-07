@@ -15,6 +15,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'profile' => $this->profile->value,
             'is_active' => $this->is_active,
+            'email_verified_at' => $this->email_verified_at,
             'professional' => new ProfessionalResource($this->whenLoaded('professional')),
             'company' => new CompanyResource($this->whenLoaded('company')),
             'created_at' => $this->created_at,

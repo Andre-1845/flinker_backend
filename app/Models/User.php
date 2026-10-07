@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Domain\Company\Models\Company;
 use App\Domain\Professional\Models\Professional;
 use App\Domain\Shared\Enums\UserProfile;
@@ -10,13 +9,15 @@ use App\Domain\Wallet\Models\Wallet;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -72,6 +73,16 @@ class User extends Authenticatable implements FilamentUser
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    /**
+     * Idioma das notificações (e-mails de confirmação de conta e de redefinição
+     * de senha). Fixo em pt_BR — vale mesmo com APP_LOCALE=en no .env; os textos
+     * ficam em lang/pt_BR.json.
+     */
+    public function preferredLocale(): string
+    {
+        return 'pt_BR';
     }
 
     public function isProfessional(): bool

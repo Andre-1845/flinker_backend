@@ -45,6 +45,10 @@ Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
 // Rotas autenticadas (todas as demais, protegidas por Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    // Reenvio do e-mail de confirmação de conta (o link em si é público e fica em
+    // routes/web.php — quem clica no e-mail não tem token Sanctum).
+    Route::post('/auth/email/verification-notification', [AuthController::class, 'resendVerificationEmail'])
+        ->middleware('throttle:6,1');
 
     // Fase 1 - Usuários
     Route::get('/users/me', [UserController::class, 'me']);
@@ -106,4 +110,3 @@ Route::middleware('auth:sanctum')->group(function () {
     //     Route::get('/logs', [AdminController::class, 'logs']);
     // });
 });
-
