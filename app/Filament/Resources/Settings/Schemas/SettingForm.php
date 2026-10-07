@@ -26,7 +26,10 @@ class SettingForm
                     ->label('Valor')
                     ->required()
                     ->numeric()
-                    ->helperText('Para "platform_margin_percent": percentual aplicado sobre o valor líquido do Flink (ex: 7 = 7%).'),
+                    ->helperText(
+                        'Para "platform_margin_percent": percentual sobre o valor líquido do Flink (ex: 7 = 7%). '
+                        .'Para "chat_retention_days": dias após a conclusão do Flink até apagar a conversa (0 = nunca apaga).'
+                    ),
             ]);
     }
 }

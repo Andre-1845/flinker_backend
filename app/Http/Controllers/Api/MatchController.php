@@ -23,7 +23,12 @@ class MatchController extends Controller
     {
         $user = $request->user();
 
-        $query = FlinkMatch::query()->with(['flink', 'professional.user']);
+        // 'flink.company.user' carregado explicitamente porque FlinkResource/
+        // CompanyResource usam whenLoaded() — sem isso, o nome da empresa some
+        // da resposta (achado de nome errado, 02/10/2026: faltava o '.user')
+        // (acertado junto com o achado #6, que precisa dele pra montar a lista
+        // de conversas do chat a partir do mesmo endpoint).
+        $query = FlinkMatch::query()->with(['flink.company.user', 'professional.user']);
 
         if ($user->isProfessional()) {
             $query->where('professional_id', $user->professional->id);

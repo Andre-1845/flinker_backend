@@ -14,3 +14,8 @@ Artisan::command('inspire', function () {
 // Requer `php artisan schedule:work` (dev) ou o cron do servidor chamando
 // `php artisan schedule:run` a cada minuto (produção).
 Schedule::command('flinks:auto-complete')->everyFifteenMinutes();
+
+// Retenção/minimização de dados do chat (achado #6, pedido do Andre
+// 2026-10-02) — ver App\Console\Commands\PruneExpiredChats. Diário é
+// granularidade suficiente pra uma janela configurada em dias.
+Schedule::command('chat:prune-expired')->daily();

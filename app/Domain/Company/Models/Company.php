@@ -21,6 +21,7 @@ class Company extends Model
         'phone',
         'address',
         'pix_key',
+        'photo_url',
         'reputation',
     ];
 

@@ -41,6 +41,7 @@ class Flink extends Model
             'net_value' => 'decimal:2',
             'platform_margin' => 'decimal:2',
             'total_value' => 'decimal:2',
+            'completed_at' => 'datetime',
         ];
     }
 

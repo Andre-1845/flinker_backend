@@ -61,7 +61,10 @@ class CompleteFlinkAction
                 'status' => TransactionStatus::Completed,
             ]);
 
-            $flink->update(['status' => FlinkStatus::Completed]);
+            // completed_at: fonte única de verdade de quando o Flink foi
+            // concluído, usada pela retenção do chat (achado #6) — ver migration
+            // 2026_10_02_000002_add_completed_at_to_flinks_table.php.
+            $flink->update(['status' => FlinkStatus::Completed, 'completed_at' => now()]);
 
             return $flink->fresh();
         });

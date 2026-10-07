@@ -21,7 +21,7 @@ class FlinkController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Flink::query()->with('company');
+        $query = Flink::query()->with('company.user');
 
         if ($request->filled(['latitude', 'longitude'])) {
             $query->near(
@@ -41,7 +41,7 @@ class FlinkController extends Controller
      */
     public function active(Request $request): JsonResponse
     {
-        $query = Flink::active()->with('company');
+        $query = Flink::active()->with('company.user');
 
         if ($request->filled(['latitude', 'longitude'])) {
             $query->near(
@@ -58,14 +58,14 @@ class FlinkController extends Controller
 
     public function byCompany(Company $company): JsonResponse
     {
-        $flinks = $company->flinks()->with('company')->latest()->paginate(15);
+        $flinks = $company->flinks()->with('company.user')->latest()->paginate(15);
 
         return response()->json(FlinkResource::collection($flinks)->response()->getData(true));
     }
 
     public function show(Flink $flink): JsonResponse
     {
-        return response()->json(['data' => new FlinkResource($flink->load('company'))]);
+        return response()->json(['data' => new FlinkResource($flink->load('company.user'))]);
     }
 
     public function store(StoreFlinkRequest $request, CreateFlinkAction $action): JsonResponse
@@ -76,7 +76,7 @@ class FlinkController extends Controller
 
         $flink = $action->handle($company, $request->validated());
 
-        return response()->json(['data' => new FlinkResource($flink->load('company'))], 201);
+        return response()->json(['data' => new FlinkResource($flink->load('company.user'))], 201);
     }
 
     public function update(UpdateFlinkRequest $request, Flink $flink, UpdateFlinkAction $action, RefundFlinkReservationAction $refundAction): JsonResponse
@@ -93,7 +93,7 @@ class FlinkController extends Controller
             $refundAction->handle($flink);
         }
 
-        return response()->json(['data' => new FlinkResource($flink->load('company'))]);
+        return response()->json(['data' => new FlinkResource($flink->load('company.user'))]);
     }
 
     /**
@@ -111,7 +111,7 @@ class FlinkController extends Controller
 
         $action->handle($match, 'company');
 
-        return response()->json(['data' => new FlinkResource($flink->fresh()->load('company'))]);
+        return response()->json(['data' => new FlinkResource($flink->fresh()->load('company.user'))]);
     }
 
     public function destroy(Request $request, Flink $flink, RefundFlinkReservationAction $refundAction): JsonResponse
